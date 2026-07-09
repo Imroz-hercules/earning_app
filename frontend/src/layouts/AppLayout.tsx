@@ -6,12 +6,15 @@ import {
   History,
   Home,
   LogOut,
+  Moon,
   ShieldCheck,
+  Sun,
   Users,
   Wallet,
 } from "lucide-react";
 
 import { useAuth } from "../state/AuthContext";
+import { useTheme } from "../state/ThemeContext";
 import type { UserProfile } from "../types";
 
 const approvedUserLinks = [
@@ -37,6 +40,7 @@ const adminLinks = [
 
 export function AppLayout() {
   const { role, profile, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const user = profile as UserProfile | null;
@@ -91,6 +95,10 @@ export function AppLayout() {
                   </option>
                 ))}
               </select>
+              <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label="Toggle dark mode">
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                <span>{isDark ? "Light mode" : "Dark mode"}</span>
+              </button>
               <button
                 type="button"
                 className="btn-secondary"
