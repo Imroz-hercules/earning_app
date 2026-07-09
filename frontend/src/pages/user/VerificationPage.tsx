@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { FileImage, Upload } from "lucide-react";
+import { FileImage, ImageOff, Upload } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { StatusBadge } from "../../components/StatusBadge";
@@ -10,6 +10,23 @@ type VerificationResponse = {
   status: string;
   documents: DocumentRecord[];
 };
+
+function SafeDocumentImage({ src, alt }: { src?: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className="grid aspect-[4/3] w-full place-items-center rounded-md border border-dashed border-slate-300 bg-white text-center text-sm font-semibold text-steel">
+        <div className="flex flex-col items-center gap-2 px-4">
+          <ImageOff className="h-6 w-6 text-slate-400" />
+          <span>Preview unavailable</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <img className="aspect-[4/3] w-full rounded-md object-cover" src={src} alt={alt} onError={() => setFailed(true)} />;
+}
 
 export function VerificationPage() {
   const [documentType, setDocumentType] = useState("government_id");
@@ -129,11 +146,7 @@ export function VerificationPage() {
                       <span className="mt-2 text-sm font-semibold text-steel">Open PDF</span>
                     </div>
                   ) : (
-                    <img
-                      className="aspect-[4/3] w-full rounded-md object-cover"
-                      src={absoluteFileUrl(document.file_url)}
-                      alt={index === 0 ? "Government ID" : "Selfie"}
-                    />
+                    <SafeDocumentImage src={absoluteFileUrl(document.file_url)} alt={index === 0 ? "Government ID" : "Selfie"} />
                   )}
                 </a>
               ) : (

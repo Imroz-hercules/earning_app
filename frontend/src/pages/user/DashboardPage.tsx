@@ -1,4 +1,5 @@
-import { ClipboardCheck, Clock3, FileCheck2, Gift, IdCard } from "lucide-react";
+import { useState } from "react";
+import { ClipboardCheck, Clock3, FileCheck2, Gift, IdCard, ImageOff } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
@@ -7,6 +8,23 @@ import { StatusBadge } from "../../components/StatusBadge";
 import { absoluteFileUrl, api } from "../../lib/api";
 import { useAuth } from "../../state/AuthContext";
 import type { Attendance, Task, TaskSubmission, UserProfile } from "../../types";
+
+function SafeProfileImage({ src, alt }: { src?: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className="grid aspect-square w-full place-items-center bg-slate-100 text-center text-sm font-semibold text-steel">
+        <div className="flex flex-col items-center gap-2 px-4">
+          <ImageOff className="h-6 w-6 text-slate-400" />
+          <span>Image unavailable</span>
+        </div>
+      </div>
+    );
+  }
+
+  return <img className="aspect-square w-full object-cover" src={src} alt={alt} onError={() => setFailed(true)} />;
+}
 
 export function DashboardPage() {
   const { profile } = useAuth();
@@ -78,7 +96,7 @@ export function DashboardPage() {
             <div className="grid gap-5 p-5 sm:grid-cols-[160px_1fr]">
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                 {selfie ? (
-                  <img className="aspect-square w-full object-cover" src={absoluteFileUrl(selfie.file_url)} alt="Verified selfie" />
+                  <SafeProfileImage src={absoluteFileUrl(selfie.file_url)} alt="Verified selfie" />
                 ) : (
                   <div className="grid aspect-square place-items-center text-sm font-semibold text-steel">Selfie</div>
                 )}
