@@ -23,7 +23,6 @@ const approvedUserLinks = [
 
 const pendingUserLinks = [
   { to: "/verification", label: "Verification", icon: FileCheck2 },
-  { to: "/bank-details", label: "Bank Details", icon: Landmark },
 ];
 
 const adminLinks = [

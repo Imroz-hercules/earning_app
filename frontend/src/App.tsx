@@ -70,7 +70,7 @@ export function App() {
         <Route path="/task" element={<UserStatusGate approvedOnly><TaskPage /></UserStatusGate>} />
         <Route path="/attendance" element={<UserStatusGate approvedOnly><AttendancePage /></UserStatusGate>} />
         <Route path="/history" element={<UserStatusGate approvedOnly><HistoryPage /></UserStatusGate>} />
-        <Route path="/bank-details" element={<BankDetailsPage />} />
+        <Route path="/bank-details" element={<UserStatusGate approvedOnly><BankDetailsPage /></UserStatusGate>} />
       </Route>
 
       <Route

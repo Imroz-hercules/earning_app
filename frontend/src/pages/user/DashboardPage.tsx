@@ -21,11 +21,19 @@ export function DashboardPage() {
     queryFn: () => api("/today-task"),
     enabled: user.status === "approved",
   });
+  const historyQuery = useQuery<TaskSubmission[]>({
+    queryKey: ["task-history"],
+    queryFn: () => api("/task-history"),
+    enabled: user.status === "approved",
+  });
 
   const locked = user.status !== "approved";
   const documents = user.documents ?? [];
   const governmentId = [...documents].reverse().find((document) => document.document_type === "government_id");
   const selfie = [...documents].reverse().find((document) => document.document_type === "selfie");
+  const approvedSubmissions = historyQuery.data?.filter((submission) => submission.status === "approved") ?? [];
+  const totalEarning = approvedSubmissions.reduce((sum, submission) => sum + (submission.task?.reward ?? 0), 0);
+  const dailyCompletedTaskEarning = data?.attendance?.completed ? data?.task?.reward ?? 0 : 0;
 
   return (
     <div className="space-y-6">
@@ -41,7 +49,7 @@ export function DashboardPage() {
         <MetricCard label="Verification" value={user.status} icon={FileCheck2} tone={user.status === "approved" ? "mint" : "amber"} />
         <MetricCard label="Today's Task" value={data?.task ? "Ready" : "None"} icon={ClipboardCheck} />
         <MetricCard label="Check In" value={data?.attendance?.check_out ? "Closed" : data?.attendance ? "Active" : "Waiting"} icon={Clock3} tone="amber" />
-        <MetricCard label="Reward" value={data?.attendance?.completed ? "Eligible" : "Locked"} icon={Gift} tone={data?.attendance?.completed ? "mint" : "coral"} />
+        <MetricCard label="Total Earning" value={locked ? "0" : totalEarning.toFixed(2)} icon={Gift} tone="mint" />
       </div>
 
       {locked ? (
@@ -95,6 +103,20 @@ export function DashboardPage() {
                     View identity document
                   </a>
                 )}
+              </div>
+            </div>
+          </section>
+
+          <section className="panel p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-steel">Daily completed task earning</p>
+                <h3 className="mt-1 text-xl font-bold text-ink">{dailyCompletedTaskEarning.toFixed(2)}</h3>
+                <p className="mt-2 text-sm leading-6 text-steel">
+                  {data?.attendance?.completed
+                    ? "Today’s task is completed, so this earning is added to your approved rewards after admin approval."
+                    : "Complete today’s task to see today’s earning amount here."}
+                </p>
               </div>
             </div>
           </section>
