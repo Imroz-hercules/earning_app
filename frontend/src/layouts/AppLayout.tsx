@@ -8,6 +8,7 @@ import {
   LogOut,
   ShieldCheck,
   Users,
+  Wallet,
 } from "lucide-react";
 
 import { useAuth } from "../state/AuthContext";
@@ -30,6 +31,7 @@ const adminLinks = [
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/tasks", label: "Daily Tasks", icon: ClipboardCheck },
   { to: "/admin/attendance", label: "Attendance", icon: History },
+  { to: "/admin/withdrawals", label: "Withdrawals", icon: Wallet },
   { to: "/admin/reports", label: "Reports", icon: ShieldCheck },
 ];
 

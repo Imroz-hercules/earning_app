@@ -40,6 +40,9 @@ class User(TimestampMixin, db.Model):
     documents = db.relationship("Document", back_populates="user", cascade="all, delete-orphan")
     attendance = db.relationship("Attendance", back_populates="user", cascade="all, delete-orphan")
     submissions = db.relationship("TaskSubmission", back_populates="user", cascade="all, delete-orphan")
+    withdrawal_requests = db.relationship(
+        "WithdrawalRequest", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
@@ -191,6 +194,29 @@ class TaskSubmission(db.Model):
             "proof_file": self.proof_file,
             "status": self.status,
             "submitted_at": self.submitted_at.isoformat(),
+        }
+
+
+class WithdrawalRequest(db.Model):
+    __tablename__ = "withdrawal_requests"
+
+    id = db.Column(db.String(36), primary_key=True, default=new_id)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    status = db.Column(db.String(24), default="pending", nullable=False)
+    requested_at = db.Column(db.DateTime(timezone=True), default=utcnow, nullable=False)
+    reviewed_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+    user = db.relationship("User", back_populates="withdrawal_requests")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "amount": float(self.amount or 0),
+            "status": self.status,
+            "requested_at": self.requested_at.isoformat(),
+            "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,
         }
 
 

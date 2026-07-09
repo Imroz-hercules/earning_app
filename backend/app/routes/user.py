@@ -1,8 +1,9 @@
 from flask import Blueprint, jsonify, request
 
+from ..earnings import get_user_earnings
 from ..extensions import db
-from ..models import Document, User
-from ..security import current_user, role_required
+from ..models import Document, User, WithdrawalRequest
+from ..security import approved_user_required, current_user, role_required
 from ..storage import save_upload
 
 user_bp = Blueprint("user", __name__)
@@ -83,3 +84,55 @@ def verification_status():
             "ifsc_code": user.ifsc_code or "",
         }
     )
+
+
+@user_bp.get("/earnings")
+@approved_user_required
+def earnings():
+    user = current_user()
+    return jsonify(get_user_earnings(user.id))
+
+
+@user_bp.get("/withdrawal-requests")
+@approved_user_required
+def withdrawal_requests():
+    user = current_user()
+    rows = (
+        WithdrawalRequest.query.filter_by(user_id=user.id)
+        .order_by(WithdrawalRequest.requested_at.desc())
+        .limit(50)
+        .all()
+    )
+    return jsonify([row.to_dict() for row in rows])
+
+
+@user_bp.post("/withdrawal-request")
+@approved_user_required
+def create_withdrawal_request():
+    user = current_user()
+    data = request.get_json(silent=True) or {}
+    amount = data.get("amount")
+
+    if not all([user.account_holder_name, user.bank_name, user.bank_account_number, user.ifsc_code]):
+        return jsonify({"message": "Save your bank details before requesting a withdrawal"}), 400
+
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return jsonify({"message": "Enter a valid withdrawal amount"}), 400
+
+    if amount <= 0:
+        return jsonify({"message": "Withdrawal amount must be greater than zero"}), 400
+
+    earnings = get_user_earnings(user.id)
+    if amount > earnings["available_balance"]:
+        return jsonify({"message": "Insufficient available balance"}), 400
+
+    pending_request = WithdrawalRequest.query.filter_by(user_id=user.id, status="pending").first()
+    if pending_request:
+        return jsonify({"message": "You already have a pending withdrawal request"}), 409
+
+    withdrawal = WithdrawalRequest(user_id=user.id, amount=amount)
+    db.session.add(withdrawal)
+    db.session.commit()
+    return jsonify(withdrawal.to_dict()), 201

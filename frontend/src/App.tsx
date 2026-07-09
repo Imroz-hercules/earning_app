@@ -7,6 +7,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminReports } from "./pages/admin/AdminReports";
 import { AdminTasks } from "./pages/admin/AdminTasks";
 import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminWithdrawals } from "./pages/admin/AdminWithdrawals";
 import { AttendancePage } from "./pages/user/AttendancePage";
 import { BankDetailsPage } from "./pages/user/BankDetailsPage";
 import { DashboardPage } from "./pages/user/DashboardPage";
@@ -85,6 +86,7 @@ export function App() {
         <Route path="/admin/tasks" element={<AdminTasks />} />
         <Route path="/admin/attendance" element={<AdminAttendance />} />
         <Route path="/admin/reports" element={<AdminReports />} />
+        <Route path="/admin/withdrawals" element={<AdminWithdrawals />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

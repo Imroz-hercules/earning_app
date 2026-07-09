@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from ..extensions import db
-from ..models import Attendance, Document, Task, TaskSubmission, User
+from ..models import Attendance, Document, Task, TaskSubmission, User, WithdrawalRequest, utcnow
 from ..security import role_required
 
 admin_bp = Blueprint("admin", __name__)
@@ -183,4 +183,27 @@ def reports():
             "checked_in": Attendance.query.filter_by(check_out=None).count(),
         }
     )
+
+
+@admin_bp.get("/withdrawals")
+@role_required("admin")
+def withdrawals():
+    rows = WithdrawalRequest.query.order_by(WithdrawalRequest.requested_at.desc()).limit(200).all()
+    return jsonify([row.to_dict() | {"user": row.user.to_dict()} for row in rows])
+
+
+@admin_bp.post("/withdrawal/<withdrawal_id>/<status>")
+@role_required("admin")
+def review_withdrawal(withdrawal_id: str, status: str):
+    if status not in {"approved", "rejected"}:
+        return jsonify({"message": "Invalid status"}), 400
+    withdrawal = WithdrawalRequest.query.get(withdrawal_id)
+    if not withdrawal:
+        return jsonify({"message": "Withdrawal request not found"}), 404
+    if withdrawal.status != "pending":
+        return jsonify({"message": "This withdrawal request was already reviewed"}), 409
+    withdrawal.status = status
+    withdrawal.reviewed_at = utcnow()
+    db.session.commit()
+    return jsonify(withdrawal.to_dict())
 

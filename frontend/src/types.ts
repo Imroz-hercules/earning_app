@@ -67,3 +67,20 @@ export type TaskSubmission = {
   submitted_at: string;
   user?: UserProfile;
 };
+
+export type EarningsSummary = {
+  total_earning: number;
+  available_balance: number;
+  pending_withdrawal: number;
+  withdrawn: number;
+};
+
+export type WithdrawalRequest = {
+  id: string;
+  user_id: string;
+  amount: number;
+  status: ReviewStatus;
+  requested_at: string;
+  reviewed_at: string | null;
+  user?: UserProfile;
+};
