@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   ClipboardCheck,
@@ -6,11 +7,13 @@ import {
   History,
   Home,
   LogOut,
+  Menu,
   Moon,
   ShieldCheck,
   Sun,
   Users,
   Wallet,
+  X,
 } from "lucide-react";
 
 import { useAuth } from "../state/AuthContext";
@@ -39,6 +42,7 @@ const adminLinks = [
 ];
 
 export function AppLayout() {
+  const [isNavOpen, setIsNavOpen] = useState(false);
   const { role, profile, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -46,15 +50,50 @@ export function AppLayout() {
   const user = profile as UserProfile | null;
   const links = role === "admin" ? adminLinks : user?.status === "approved" ? approvedUserLinks : pendingUserLinks;
 
+  useEffect(() => {
+    setIsNavOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = isNavOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isNavOpen]);
+
+  const closeNav = () => setIsNavOpen(false);
+
   return (
     <div className="min-h-screen bg-slate-50">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-200 bg-white lg:block">
+      {isNavOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={closeNav}
+          aria-label="Close navigation"
+        />
+      ) : null}
+
+      <aside
+        id="app-sidebar"
+        className={`fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-200 bg-white transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+          isNavOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex h-16 items-center gap-3 border-b border-slate-200 px-5">
           <span className="grid h-9 w-9 place-items-center rounded-md bg-ink text-sm font-bold text-white">TH</span>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="font-bold text-ink">TaskHub</p>
             <p className="text-xs text-steel">Daily task operations</p>
           </div>
+          <button
+            type="button"
+            className="btn-secondary shrink-0 p-2 lg:hidden"
+            onClick={closeNav}
+            aria-label="Close navigation"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
         <nav className="space-y-1 px-3 py-4">
           {links.map(({ to, label, icon: Icon }) => (
@@ -62,6 +101,7 @@ export function AppLayout() {
               key={to}
               to={to}
               end={to === "/admin" || to === "/dashboard"}
+              onClick={closeNav}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold ${
                   isActive ? "bg-ink text-white" : "text-steel hover:bg-slate-100 hover:text-ink"
@@ -77,38 +117,41 @@ export function AppLayout() {
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
-          <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-            <div>
-              <p className="text-sm text-steel">{role === "admin" ? "Admin workspace" : "Member workspace"}</p>
-              <h1 className="text-lg font-bold text-ink">{profile?.name ?? "TaskHub"}</h1>
-            </div>
-            <div className="flex items-center gap-2">
-              <select
-                className="input max-w-48 lg:hidden"
-                onChange={(event) => navigate(event.target.value)}
-                value={links.some((link) => link.to === location.pathname) ? location.pathname : links[0]?.to}
-                aria-label="Navigate"
+          <div className="flex min-h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="btn-secondary shrink-0 p-2 lg:hidden"
+                onClick={() => setIsNavOpen(true)}
+                aria-expanded={isNavOpen}
+                aria-controls="app-sidebar"
+                aria-label="Open navigation"
               >
-                {links.map((link) => (
-                  <option key={link.to} value={link.to}>
-                    {link.label}
-                  </option>
-                ))}
-              </select>
-              <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label="Toggle dark mode">
+                <Menu className="h-5 w-5" />
+              </button>
+              <div className="min-w-0">
+                <p className="truncate text-xs text-steel sm:text-sm">
+                  {role === "admin" ? "Admin workspace" : "Member workspace"}
+                </p>
+                <h1 className="truncate text-base font-bold text-ink sm:text-lg">{profile?.name ?? "TaskHub"}</h1>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <button type="button" className="theme-toggle px-2 sm:px-4" onClick={toggleTheme} aria-label="Toggle dark mode">
                 {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                <span>{isDark ? "Light mode" : "Dark mode"}</span>
+                <span className="hidden sm:inline">{isDark ? "Light mode" : "Dark mode"}</span>
               </button>
               <button
                 type="button"
-                className="btn-secondary"
+                className="btn-secondary px-2 sm:px-4"
                 onClick={() => {
                   logout();
                   navigate("/login");
                 }}
+                aria-label="Logout"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
